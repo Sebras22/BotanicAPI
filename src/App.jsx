@@ -1,16 +1,22 @@
 import { useEffect, useState } from "react";
 import { LineChart } from "@mantine/charts";
 import "./App.css";
-import { MantineProvider } from "@mantine/core";
+import { List, MantineProvider, Card, Image, Text, Flex } from "@mantine/core";
+import { AreaChart } from '@mantine/charts';
 import "@mantine/core/styles.css";
 import "@mantine/charts/styles.css";
 
 function App() {
-    const [plants, setPlants] = useState([]);
+    const [rates, setRates] = useState([]);
+    const [assets, setAssets] = useState([]);
+    const [num1History, setnum1History] = useState([]);
+    const [num1Converted, setnum1Converted] = useState([]);
+    const [num2History, setnum2History] = useState([]);
+    const [num3History, setnum3History] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
 
     // la fonction qui va fetch les données
-    const getBotanicInfo = async (url = "rates", setter) => {
+    const getMoneyInfo = async (url = "rates", setter) => {
         const response = await fetch(`https://api.coincap.io/v2/${url}`);
 
         const data = await response.json();
@@ -19,75 +25,104 @@ function App() {
         setter(data.data);
     };
 
-    const truc = [
-        {
-            date: "Mar 22",
-            Apples: 2890,
-            Oranges: 2338,
-            Tomatoes: 2452,
-        },
-        {
-            date: "Mar 23",
-            Apples: 2756,
-            Oranges: 2103,
-            Tomatoes: 2402,
-        },
-        {
-            date: "Mar 24",
-            Apples: 3322,
-            Oranges: 986,
-            Tomatoes: 1821,
-        },
-        {
-            date: "Mar 25",
-            Apples: 3470,
-            Oranges: 2108,
-            Tomatoes: 2809,
-        },
-        {
-            date: "Mar 26",
-            Apples: 3129,
-            Oranges: 1726,
-            Tomatoes: 2290,
-        },
-    ];
+    const getMoneyHistoryInfo = async (url = "bitcoin", setter) => {
+        const response = await fetch(`api.coincap.io/v2/assets/${url}/history?interval=d1`);
+
+        const data = await response.json();
+        console.log(data);
+
+        setter(data.data);
+    };
+
+    const unixToDate = (time) => {
+        const date = new Date(time*1000);
+        return date.toLocaleString()
+    }
 
     // un hook se met toujours dans le composant, jamais dans une fonction
     useEffect(() => {
         // quand le composant il se monte
-        getBotanicInfo("rates", setPlants);
+        getMoneyInfo("rates", setRates);
+        getMoneyInfo("assets", setAssets);
+
+        getMoneyHistoryInfo("bitcoin", setnum1History);
+
         return () => {
             // quand le composant il se démonte
         };
     }, []);
 
-    const SortingValues = plants.sort((a, b) => {
-        return parseFloat(a.rateUsd) - parseFloat(b.rateUsd);
-    });
+    useEffect(() => {
+        if (num1History?.length > 0) {
+            const convertedTime = num1History.map(el => ({
+                ...el,
+                time: unixToDate(el.time * 1000),
+                priceUsd: parseFloat(el.priceUsd)
+            }));
+            setnum1Converted(convertedTime);
+        }
+    }, [num1History])
+
+    // const SortingValues = rates.sort((a, b) => {
+    //     return parseFloat(a.rateUsd) - parseFloat(b.rateUsd);
+    // });
 
     return (
         <>
-            <div>HA</div>
-            {SortingValues.map((plant) => (
-                <div key={plant.id}>
-                    {plant.id} - {plant.rateUsd}
-                </div>
-            ))}
+            
+            
             <MantineProvider>
-                <LineChart
-                    h={300}
-                    dataKey="date"
-                    data={truc}
+                {/* {SortingValues.map((plant) => (
+                    <List key={plant.id}>
+                        <List.Item>{plant.id} - {plant.rateUsd}</List.Item>
+                    </List>
+                ))} */}
+                <AreaChart
+                    height={300}
+                    data={setnum1Converted}
+                    dataKey="time"
                     series={[
-                        { name: "Apples", color: "indigo.6" },
-                        { name: "Oranges", color: "blue.6" },
-                        { name: "Tomatoes", color: "teal.6" },
+                        { name: 'Price USD', color: 'blue' }
                     ]}
-                    curveType="bump"
-                    gridAxis="xy"
+                    curveType="linear"
                 />
+                <Flex
+                mih={50}
+                bg="rgba(0, 0, 0, .3)"
+                gap="lg"
+                justify="center"
+                align="flex-start"
+                direction="row"
+                wrap="wrap"
+                >
+                {assets && assets.map((el, key) => (
+                    
+                    <Card
+                    shadow="sm"
+                    padding="xl"
+                    component="a"
+                    href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                    target="_blank"
+                    key={key}
+                    w={{ base: 200, sm: 400, lg: 300 }}
+                    >
+                        
+                        <Card.Section>
+                        {el.symbol}
+                        </Card.Section>
+                
+                        <Text fw={500} size="lg" mt="md">
+                         {el.rank}. {el.name} 
+                        </Text>
+                
+                        <Text mt="xs" c="dimmed" size="sm">
+                        {el.priceUsd}
+                        </Text>
+                    </Card>
+                ))}
+                </Flex>
             </MantineProvider>
-            <div></div>
+            
         </>
     );
 }

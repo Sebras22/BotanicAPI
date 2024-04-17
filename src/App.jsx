@@ -47,12 +47,6 @@ function App() {
 
         getMoneyHistoryInfo("bitcoin", setnum1History);
 
-        return () => {
-            // quand le composant il se démonte
-        };
-    }, []);
-
-    useEffect(() => {
         if (num1History?.length > 0) {
             const convertedTime = num1History.map(el => ({
                 ...el,
@@ -61,7 +55,13 @@ function App() {
             }));
             setnum1Converted(convertedTime);
         }
-    }, [num1History])
+
+        return () => {
+            // quand le composant il se démonte
+        };
+    }, []);
+
+
 
     // const SortingValues = rates.sort((a, b) => {
     //     return parseFloat(a.rateUsd) - parseFloat(b.rateUsd);

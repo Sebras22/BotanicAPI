@@ -26,7 +26,7 @@ function App() {
     };
 
     const getMoneyHistoryInfo = async (url = "bitcoin", setter) => {
-        const response = await fetch(`api.coincap.io/v2/assets/${url}/history?interval=d1`);
+        const response = await fetch(`https://api.coincap.io/v2/assets/${url}/history?interval=d1`);
 
         const data = await response.json();
         console.log(data);
@@ -42,10 +42,12 @@ function App() {
     // un hook se met toujours dans le composant, jamais dans une fonction
     useEffect(() => {
         // quand le composant il se monte
-        getMoneyInfo("rates", setRates);
+        // getMoneyInfo("rates", setRates);
         getMoneyInfo("assets", setAssets);
 
         getMoneyHistoryInfo("bitcoin", setnum1History);
+
+        
 
         if (num1History?.length > 0) {
             const convertedTime = num1History.map(el => ({
@@ -62,7 +64,7 @@ function App() {
     }, []);
 
 
-
+        console.log(num1History);
     // const SortingValues = rates.sort((a, b) => {
     //     return parseFloat(a.rateUsd) - parseFloat(b.rateUsd);
     // });
@@ -79,13 +81,14 @@ function App() {
                 ))} */}
                 <AreaChart
                     height={300}
-                    data={setnum1Converted}
-                    dataKey="time"
+                    data={num1History}
+                    dataKey="date"
                     series={[
-                        { name: 'Price USD', color: 'blue' }
+                        { name: 'priceUsd', color: 'blue' }
                     ]}
                     curveType="linear"
                 />
+                
                 <Flex
                 mih={50}
                 bg="rgba(0, 0, 0, .3)"
@@ -95,6 +98,7 @@ function App() {
                 direction="row"
                 wrap="wrap"
                 >
+                    
                 {assets && assets.map((el, key) => (
                     
                     <Card
